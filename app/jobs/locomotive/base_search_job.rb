@@ -37,7 +37,7 @@ module Locomotive
           type:       "9-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
           title:      "#{entry.title} #{entry.subtitle}",
-          content:    entry.blog_post_to_index,
+          #content:    entry.blog_post_to_index,
           visible:    entry.visible?,
           data:       entry.blog_post_data_to_index
         )
@@ -47,7 +47,7 @@ module Locomotive
           type:       "5-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
           title:      "#{entry.title} Travel Video",
-          content:    entry.blog_post_to_index,
+          #content:    entry.blog_post_to_index,
           visible:    entry.visible?,
           data:       entry.video_data_to_index
         )
@@ -57,7 +57,7 @@ module Locomotive
           type:       "1-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
           title:      "#{entry.name} Travel Guides",
-          content:    entry.destinations_to_index,
+          #content:    entry.destinations_to_index,
           visible:    entry.visible?,
           data:       entry.destination_data_to_index
         )

@@ -138,11 +138,11 @@ module Locomotive
           is_things_to_do = post_type_str.include?("things to do") || post_type_str == "things-to-do"  || post_type_str == "itinerary"
 
           full_desc = if is_things_to_do
-            truncate_limit = self.long_form == true ? 500 : 3000
+            truncate_limit = self.long_form == true ? 8000 : 8000
             headers_text = extract_headers(self.body)
             headers_text.truncate(truncate_limit)
           else
-            truncate_desc(sanitize_search_content(self.body), 500)
+            truncate_desc(sanitize_search_content(self.body), 8000)
           end
 
           weight = 1
