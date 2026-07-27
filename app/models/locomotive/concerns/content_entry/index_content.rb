@@ -101,72 +101,49 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
-        def extract_headers_or_summary(html_content)
+        def extract_headers(html_content, max_headers = 5)
           return "" if html_content.blank?
 
           doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
-          wrapper = doc.at_css('.itinerary-summary-wrapper')
 
-          if wrapper.present?
-            # 1. Grab the <h2> inside .itinerary-summary-wrapper
-            h2_title = wrapper.at_css('h2')&.text&.strip
+          # List of header titles to ignore (case-insensitive match)
+          ignored_terms = [
+            /quick summary/i,
+            /further reading/i,
+            /table of contents/i,
+            /related posts/i,
+            /conclusion/i
+          ]
 
-            # 2. Extract all .ps-row .ps-title elements INSIDE the wrapper
-            ps_titles = wrapper.css('.ps-row .ps-title')
-                              .map(&:text)
-                              .map(&:strip)
-                              .reject(&:empty?)
+          headers = doc.css('h1, h2, h3, h4, h5, h6')
+                      .map(&:text)
+                      .map(&:strip)
+                      .reject(&:empty?)
+                      .reject { |text| ignored_terms.any? { |pattern| text.match?(pattern) } }
+                      .first(max_headers)
 
-            parts = []
-            
-            if h2_title.present?
-              # Remove trailing period if present to prevent double periods ("..")
-              clean_h2 = h2_title.sub(/\.+\z/, '')
-              parts << "#{clean_h2}."
-            end
+          return "" if headers.empty?
 
-            if ps_titles.any?
-              # Clean trailing dots and join with periods
-              clean_titles = ps_titles.map { |t| t.sub(/\.+\z/, '') }
-              parts << clean_titles.join('. ') + '.'
-            end
-
-            parts.join(' ')
-          else
-            # Fallback for standard posts without the itinerary summary block
-            headers = doc.css('h1, h2, h3, h4, h5, h6')
-                        .map(&:text)
-                        .map(&:strip)
-                        .reject(&:empty?)
-                        .first(5)
-
-            return "" if headers.empty?
-
-            headers.each_with_index.map do |header, idx|
-              clean_header = header.sub(/\.+\z/, '')
-              if clean_header.match?(/^\d+[\.\)]/)
-                "#{clean_header}."
-              else
-                "#{idx + 1}. #{clean_header}."
-              end
-            end.join(' ')
-          end
+          # Ensure each header ends clean with a single period
+          headers.map do |header|
+            clean_header = header.sub(/\.+\z/, '') # Strip existing trailing dots
+            "#{clean_header}."
+          end.join(' ')
         end
         def blog_post_data_to_index
           return nil if self.no_index == true
 
-          # 1. Grab numbered headers
-          headers_text = extract_numbered_headers(self.body, 5)
+          # 1. Extract clean section headers
+          headers_text = extract_headers(self.body, 5)
 
-          # 2. Grab a short snippet of paragraph text from the body
+          # 2. Extract background body paragraph snippet
           body_text = truncate_desc(sanitize_search_content(self.body), 150)
 
-          # 3. Combine into a single natural sentence string:
-          # "1. Admire the Beauty of the Grand Palace. 2. Visit Wat Pho. The Grand Palace is located in..."
+          # 3. Combine into single description string
           full_desc = [headers_text, body_text]
                         .reject(&:blank?)
                         .join(' ')
-                        .truncate(350) # Safe size limit to prevent Algolia 10KB error
+                        .truncate(350) # Prevents Algolia 10KB payload errors
 
           weight = 1
           slug_down = self._slug.to_s.downcase
