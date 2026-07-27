@@ -112,17 +112,32 @@ module Locomotive
             .map(&:text)
             .map(&:strip)
             .reject(&:empty?)
+          
+          return "" if headers.empty?
+
+          # Number each header unless it already starts with a number
+          headers.each_with_index.map do |header, idx|
+            clean_header = header.chomp('.') # Remove trailing period if present
+            if clean_header.match?(/^\d+[\.\)]/)
+              "#{clean_header}."
+            else
+              "#{idx + 1}. #{clean_header}."
+            end
+          end.join(' ')
+
         end
         def blog_post_data_to_index
-          if self.meta_description.nil? or self.meta_description.empty?
-            desc = truncate_desc(sanitize_search_content(self.body), 200)
-          else
-            desc = self.meta_description
-          end
-          headers = extract_headers(self.body)
-          if headers.any?
-            desc = "#{desc} | Sections: #{headers.join(' • ')}"
-          end
+          headers_text = extract_numbered_headers(self.body, 5)
+
+          # 2. Grab a short snippet of paragraph text from the body
+          body_text = truncate_desc(sanitize_search_content(self.body), 150)
+
+          # 3. Combine into a single natural sentence string:
+          # "1. Admire the Beauty of the Grand Palace. 2. Visit Wat Pho. The Grand Palace is located in..."
+          full_desc = [headers_text, body_text]
+                        .reject(&:blank?)
+                        .join(' ')
+                        .truncate(350) # Safe size limit to prevent Algolia 10KB error
 
           weight = 1
 
