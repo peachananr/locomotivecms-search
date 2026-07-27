@@ -134,13 +134,13 @@ module Locomotive
           return nil if self.no_index == true
 
           # 1. Extract clean section headers
-          headers_text = extract_headers(self.body, 5)
+          headers_text = extract_headers(self.body, 20)
 
           # 2. Extract background body paragraph snippet
-          body_text = truncate_desc(sanitize_search_content(self.body), 150)
+          #body_text = truncate_desc(sanitize_search_content(self.body), 150)
 
           # 3. Combine into single description string
-          full_desc = [headers_text, body_text]
+          full_desc = [headers_text, ]
                         .reject(&:blank?)
                         .join(' ')
                         .truncate(350) # Prevents Algolia 10KB payload errors
