@@ -101,31 +101,48 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
+        def extract_headers(html_content)
+          return '' if html_content.blank?
 
+          # Parse HTML fragment using Nokogiri
+          doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
+
+          # Find all heading tags, extract clean text, strip whitespace, and join them
+          doc.css('h1, h2, h3, h4, h5, h6')
+            .map(&:text)
+            .map(&:strip)
+            .reject(&:empty?)
+            .join(' ')
+        end
         def blog_post_data_to_index
           if self.meta_description.nil? or self.meta_description.empty?
             desc = truncate_desc(sanitize_search_content(self.body), 200)
           else
             desc = self.meta_description
           end
+          headers = extract_headers(self.body)
+          if headers.any?
+            desc = "#{desc} | Sections: #{headers.join(' • ')}"
+          end
+          
           weight = 1
 
-          if self._label.downcase.include? "things to do"
+          if self._slug.downcase.include? "things-to-do"
             weight = 9
-          elsif self._label.downcase.include? "itinerary"
+          elsif self._slug.downcase.include? "itinerary"
             weight = 10
-          elsif self._label.downcase.include? "places to visit"
+          elsif self._slug.downcase.include? "places-to-visit"
             weight = 8
-          elsif self._label.downcase.include? "travel guide"
+          elsif self._slug.downcase.include? "travel-guide"
             weight = 7
-          elsif self._label.downcase.include? "hiking guide"
+          elsif self._slug.downcase.include? "hiking-guide"
             weight = 6
-          elsif self._label.downcase.include? "complete guide"
+          elsif self._slug.downcase.include? "complete-guide"
             weight = 7
-          elsif self._label.downcase.include? "ultimate guide"
+          elsif self._slug.downcase.include? "ultimate-guide"
             weight = 7
           end
-
+          
           data = {
             '_content_type' => self.content_type.slug,
             '_slug'         => self._slug,
@@ -134,7 +151,8 @@ module Locomotive
             'description'   => desc,
             'thumbnail'     => self.header_img_thumb.url,
             'published_date'   => self.date,
-            'name_weight' => weight
+            'name_weight' => weight,
+            
           }
 
           data
