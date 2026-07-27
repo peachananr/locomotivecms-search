@@ -101,7 +101,7 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
-        def extract_headers(html_content, max_chars = 3000)
+        def extract_headers(html_content, max_chars = 1200)
           return "" if html_content.blank?
 
           doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
@@ -131,6 +131,7 @@ module Locomotive
         def blog_post_data_to_index
           return nil if self.no_index == true || !self.visible? # or !self.published?
           # 1. Extract clean section headers
+          Rails.logger.info "[Algolia Index] Processing slug: #{self._slug}"
           headers_text = extract_headers(self.body)
 
           # 2. Extract background body paragraph snippet
@@ -140,7 +141,7 @@ module Locomotive
           full_desc = [headers_text, ]
                         .reject(&:blank?)
                         .join(' ')
-                        .truncate(3000) # Prevents Algolia 10KB payload errors
+                        .truncate(1200) # Prevents Algolia 10KB payload errors
 
           weight = 1
           slug_down = self._slug.to_s.downcase
