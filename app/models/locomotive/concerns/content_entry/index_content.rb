@@ -79,7 +79,7 @@ module Locomotive
                   break
                 else
                   content = "#{content} #{i.text} "
-                end
+                end 
               end
               content
               #truncate_desc(sanitize_search_content(content).downcase.chomp.gsub(/[^0-9A-Za-z ]/, ' ').split(" ").uniq.select{|w| w.length >= 3}.join(" "), 8000)
@@ -142,7 +142,11 @@ module Locomotive
             headers_text = extract_headers(self.body)
             headers_text.truncate(truncate_limit)
           else
-            truncate_desc(sanitize_search_content(self.body), 8000)
+            if self.meta_description.nil? or self.meta_description.empty?
+              desc = truncate_desc(sanitize_search_content(self.body), 3000)
+            else
+              desc = self.meta_description
+            end
           end
 
           weight = 1

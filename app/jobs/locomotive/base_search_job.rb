@@ -49,17 +49,17 @@ module Locomotive
           data:       data
         )
 
-      when "videos"
-        data = entry.video_data_to_index
-        return if data.nil?
+      #when "videos"
+      #  data = entry.video_data_to_index
+      #  return if data.nil?
 
-        search_backend(entry.site, locale)&.save_object(
-          type:       "5-#{entry.content_type.slug}",
-          object_id:  entry._id.to_s,
-          title:      "#{entry.title} Travel Video".strip,
-          visible:    entry.visible?,
-          data:       data
-        )
+      #  search_backend(entry.site, locale)&.save_object(
+      #    type:       "5-#{entry.content_type.slug}",
+      #    object_id:  entry._id.to_s,
+      #    title:      "#{entry.title} Travel Video".strip,
+      #    visible:    entry.visible?,
+      #    data:       data
+      #  )
 
       when "destinations"
         data = entry.destination_data_to_index
