@@ -142,15 +142,26 @@ module Locomotive
             weight = 7
           end
           
+          # 3. Choose the best thumbnail (prefer WebP for performance)
+          thumb_url = if self.header_img_thumb_webp.present?
+                        self.header_img_thumb_webp.url
+                      elsif self.header_img_thumb.present?
+                        self.header_img_thumb.url
+                      else
+                        nil
+                      end
           data = {
             '_content_type' => self.content_type.slug,
             '_slug'         => self._slug,
             '_label'        => self._label,
             'subtitle'        => self.subtitle,
+            'location'        => self.location,
             'description'   => desc,
-            'thumbnail'     => self.header_img_thumb.url,
+            'thumbnail'     => thumb_url,
+            'tags' => self.tags,
+            'post_type'         => self.post_type,
             'published_date'   => self.date,
-            'name_weight' => weight,
+            'name_weight' => weight
             
           }
 
