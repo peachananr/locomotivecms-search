@@ -129,22 +129,21 @@ module Locomotive
           formatted_headers.truncate(max_chars, separator: ' ')
         end
         def blog_post_data_to_index
-          return nil if self.no_index == true || !self.visible? # or !self.published?
-          # 1. Extract clean section headers
-          Rails.logger.info "[Algolia Index] Processing slug: #{self._slug}"
-          headers_text = extract_headers(self.body)
+          return nil if self.no_index == true || !self.visible?
 
-          # 2. Extract background body paragraph snippet
-          #body_text = truncate_desc(sanitize_search_content(self.body), 150)
-          truncate = 3000
-          if self.long_form == true
-            truncate = 500
+          Rails.logger.info "[Algolia Index] Processing slug: #{self._slug}"
+
+          # Check post_type safely (handles strings, symbols, or select field objects)
+          post_type_str = self.post_type.to_s.downcase.strip
+          is_things_to_do = post_type_str.include?("things to do") || post_type_str == "things-to-do"  || post_type_str == "itinerary"
+
+          full_desc = if is_things_to_do
+            truncate_limit = self.long_form == true ? 500 : 3000
+            headers_text = extract_headers(self.body)
+            headers_text.truncate(truncate_limit)
+          else
+            truncate_desc(sanitize_search_content(self.body), 500)
           end
-          # 3. Combine into single description string
-          full_desc = [headers_text, ]
-                        .reject(&:blank?)
-                        .join(' ')
-                        .truncate(truncate) # Prevents Algolia 10KB payload errors
 
           weight = 1
           slug_down = self._slug.to_s.downcase
@@ -165,7 +164,7 @@ module Locomotive
             'subtitle'       => self.subtitle,
             'location'       => self.location,
             'description'    => full_desc,
-            'tags'            => self.tags,
+            'tags'           => self.tags,
             'thumbnail'      => self.header_img_thumb_webp&.url || self.header_img_thumb&.url,
             'published_date' => self.date&.strftime('%b %d, %Y'),
             'name_weight'    => weight
