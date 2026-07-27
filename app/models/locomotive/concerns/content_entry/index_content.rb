@@ -132,7 +132,7 @@ module Locomotive
           return nil if self.no_index == true
 
           # 1. Extract clean section headers
-          headers_text = extract_headers(self.body, 20)
+          headers_text = extract_headers(self.body)
 
           # 2. Extract background body paragraph snippet
           #body_text = truncate_desc(sanitize_search_content(self.body), 150)
