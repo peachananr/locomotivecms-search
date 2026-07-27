@@ -161,6 +161,7 @@ module Locomotive
             'subtitle'       => self.subtitle,
             'location'       => self.location,
             'description'    => full_desc,
+            'tags'            => self.tags,
             'thumbnail'      => self.header_img_thumb_webp&.url || self.header_img_thumb&.url,
             'published_date' => self.date&.strftime('%b %d, %Y'),
             'name_weight'    => weight
