@@ -101,12 +101,11 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
-        def extract_headers(html_content, max_headers = 5)
+        def extract_headers(html_content, max_chars = 3000)
           return "" if html_content.blank?
 
           doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
 
-          # List of header titles to ignore (case-insensitive match)
           ignored_terms = [
             /quick summary/i,
             /further reading/i,
@@ -120,30 +119,23 @@ module Locomotive
                       .map(&:strip)
                       .reject(&:empty?)
                       .reject { |text| ignored_terms.any? { |pattern| text.match?(pattern) } }
-                      .first(max_headers)
 
           return "" if headers.empty?
 
-          # Ensure each header ends clean with a single period
-          headers.map do |header|
-            clean_header = header.sub(/\.+\z/, '') # Strip existing trailing dots
+          formatted_headers = headers.map do |header|
+            clean_header = header.sub(/\.+\z/, '') # Remove existing trailing dots
             "#{clean_header}."
           end.join(' ')
+
+          # Truncate at maximum allowed characters without cutting off mid-word
+          formatted_headers.truncate(max_chars, separator: ' ')
         end
+
         def blog_post_data_to_index
           return nil if self.no_index == true
 
-          # 1. Extract clean section headers
-          headers_text = extract_headers(self.body, 20)
-
-          # 2. Extract background body paragraph snippet
-          #body_text = truncate_desc(sanitize_search_content(self.body), 150)
-
-          # 3. Combine into single description string
-          full_desc = [headers_text, ]
-                        .reject(&:blank?)
-                        .join(' ')
-                        .truncate(350) # Prevents Algolia 10KB payload errors
+          # 1. Extract ALL valid section headers up to 3,000 chars
+          headers_text = extract_headers(self.body, 3000)
 
           weight = 1
           slug_down = self._slug.to_s.downcase
@@ -163,7 +155,7 @@ module Locomotive
             'title'          => self.title,
             'subtitle'       => self.subtitle,
             'location'       => self.location,
-            'description'    => full_desc,
+            'description'    => headers_text,
             'thumbnail'      => self.header_img_thumb_webp&.url || self.header_img_thumb&.url,
             'published_date' => self.date&.strftime('%b %d, %Y'),
             'name_weight'    => weight
