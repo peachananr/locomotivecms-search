@@ -114,7 +114,7 @@ module Locomotive
             /conclusion/i
           ]
 
-          headers = doc.css('h1, h2, h3, h4, h5, h6')
+          headers = doc.css('h1, h2, h3')
                       .map(&:text)
                       .map(&:strip)
                       .reject(&:empty?)
@@ -136,9 +136,9 @@ module Locomotive
 
           # 2. Extract background body paragraph snippet
           #body_text = truncate_desc(sanitize_search_content(self.body), 150)
-          truncate = 1500
+          truncate = 3000
           if self.long_form == true
-            truncate = 500
+            truncate = 1000
           end
           # 3. Combine into single description string
           full_desc = [headers_text, ]
