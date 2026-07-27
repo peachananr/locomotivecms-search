@@ -124,6 +124,9 @@ module Locomotive
           end.join(' ')
         end
         def blog_post_data_to_index
+          return nil if self.no_index == true
+
+          # 1. Grab numbered headers
           headers_text = extract_numbered_headers(self.body, 5)
 
           # 2. Grab a short snippet of paragraph text from the body
@@ -137,47 +140,28 @@ module Locomotive
                         .truncate(350) # Safe size limit to prevent Algolia 10KB error
 
           weight = 1
-
-          if self._slug.downcase.include? "things-to-do"
-            weight = 9
-          elsif self._slug.downcase.include? "itinerary"
-            weight = 10
-          elsif self._slug.downcase.include? "places-to-visit"
-            weight = 8
-          elsif self._slug.downcase.include? "travel-guide"
-            weight = 7
-          elsif self._slug.downcase.include? "hiking-guide"
-            weight = 6
-          elsif self._slug.downcase.include? "complete-guide"
-            weight = 7
-          elsif self._slug.downcase.include? "ultimate-guide"
-            weight = 7
+          slug_down = self._slug.to_s.downcase
+          if slug_down.include?("things-to-do")       then weight = 9
+          elsif slug_down.include?("itinerary")       then weight = 10
+          elsif slug_down.include?("places-to-visit") then weight = 8
+          elsif slug_down.include?("travel-guide")    then weight = 7
+          elsif slug_down.include?("hiking-guide")    then weight = 6
+          elsif slug_down.include?("complete-guide")  then weight = 7
+          elsif slug_down.include?("ultimate-guide")  then weight = 7
           end
-          
-          # 3. Choose the best thumbnail (prefer WebP for performance)
-          thumb_url = if self.header_img_thumb_webp.present?
-                        self.header_img_thumb_webp.url
-                      elsif self.header_img_thumb.present?
-                        self.header_img_thumb.url
-                      else
-                        nil
-                      end
-          data = {
-            '_content_type' => self.content_type.slug,
-            '_slug'         => self._slug,
-            '_label'        => self._label,
-            'subtitle'        => self.subtitle,
-            'location'        => self.location,
-            'description'   => desc,
-            'thumbnail'     => thumb_url,
-            'tags' => self.tags,
-            'post_type'         => self.post_type,
-            'published_date'   => self.date,
-            'name_weight' => weight
-            
-          }
 
-          data
+          {
+            '_content_type'  => self.content_type.slug,
+            '_slug'          => self._slug,
+            '_label'         => self._label,
+            'title'          => self.title,
+            'subtitle'       => self.subtitle,
+            'location'       => self.location,
+            'description'    => full_desc,
+            'thumbnail'      => self.header_img_thumb_webp&.url || self.header_img_thumb&.url,
+            'published_date' => self.date&.strftime('%b %d, %Y'),
+            'name_weight'    => weight
+          }
         end
         
 
