@@ -101,18 +101,16 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
-        def extract_headers(html_content)
-          return '' if html_content.blank?
+        def extract_numbered_headers(html_content, max_headers = 5)
+          return "" if html_content.blank?
 
-          # Parse HTML fragment using Nokogiri
           doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
+          headers = doc.css('h1, h2, h3, h4, h5, h6')
+                      .map(&:text)
+                      .map(&:strip)
+                      .reject(&:empty?)
+                      .first(max_headers)
 
-          # Find all heading tags, extract clean text, strip whitespace, and join them
-          doc.css('h1, h2, h3, h4, h5, h6')
-            .map(&:text)
-            .map(&:strip)
-            .reject(&:empty?)
-          
           return "" if headers.empty?
 
           # Number each header unless it already starts with a number
@@ -124,7 +122,6 @@ module Locomotive
               "#{idx + 1}. #{clean_header}."
             end
           end.join(' ')
-
         end
         def blog_post_data_to_index
           headers_text = extract_numbered_headers(self.body, 5)
