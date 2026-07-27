@@ -129,8 +129,7 @@ module Locomotive
           formatted_headers.truncate(max_chars, separator: ' ')
         end
         def blog_post_data_to_index
-          return nil if self.no_index == true
-
+          return nil if self.no_index == true || self.visible == false # or !self.published?
           # 1. Extract clean section headers
           headers_text = extract_headers(self.body)
 
