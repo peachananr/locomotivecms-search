@@ -138,7 +138,7 @@ module Locomotive
           #body_text = truncate_desc(sanitize_search_content(self.body), 150)
           truncate = 3000
           if self.long_form == true
-            truncate = 1000
+            truncate = 500
           end
           # 3. Combine into single description string
           full_desc = [headers_text, ]
