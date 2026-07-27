@@ -136,12 +136,15 @@ module Locomotive
 
           # 2. Extract background body paragraph snippet
           #body_text = truncate_desc(sanitize_search_content(self.body), 150)
-
+          truncate = 1500
+          if self.long_form == true
+            truncate = 500
+          end
           # 3. Combine into single description string
           full_desc = [headers_text, ]
                         .reject(&:blank?)
                         .join(' ')
-                        .truncate(800) # Prevents Algolia 10KB payload errors
+                        .truncate(truncate) # Prevents Algolia 10KB payload errors
 
           weight = 1
           slug_down = self._slug.to_s.downcase
