@@ -141,7 +141,7 @@ module Locomotive
           full_desc = [headers_text, ]
                         .reject(&:blank?)
                         .join(' ')
-                        .truncate(350) # Prevents Algolia 10KB payload errors
+                        .truncate(3000) # Prevents Algolia 10KB payload errors
 
           weight = 1
           slug_down = self._slug.to_s.downcase
