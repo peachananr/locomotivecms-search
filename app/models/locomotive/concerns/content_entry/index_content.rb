@@ -101,27 +101,56 @@ module Locomotive
             end
           end.compact.join(' ').strip
         end
-        def extract_numbered_headers(html_content, max_headers = 5)
+        def extract_headers_or_summary(html_content)
           return "" if html_content.blank?
 
           doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
-          headers = doc.css('h1, h2, h3, h4, h5, h6')
-                      .map(&:text)
-                      .map(&:strip)
-                      .reject(&:empty?)
-                      .first(max_headers)
+          wrapper = doc.at_css('.itinerary-summary-wrapper')
 
-          return "" if headers.empty?
+          if wrapper.present?
+            # 1. Grab the <h2> inside .itinerary-summary-wrapper
+            h2_title = wrapper.at_css('h2')&.text&.strip
 
-          # Number each header unless it already starts with a number
-          headers.each_with_index.map do |header, idx|
-            clean_header = header.chomp('.') # Remove trailing period if present
-            if clean_header.match?(/^\d+[\.\)]/)
-              "#{clean_header}."
-            else
-              "#{idx + 1}. #{clean_header}."
+            # 2. Extract all .ps-row .ps-title elements INSIDE the wrapper
+            ps_titles = wrapper.css('.ps-row .ps-title')
+                              .map(&:text)
+                              .map(&:strip)
+                              .reject(&:empty?)
+
+            parts = []
+            
+            if h2_title.present?
+              # Remove trailing period if present to prevent double periods ("..")
+              clean_h2 = h2_title.sub(/\.+\z/, '')
+              parts << "#{clean_h2}."
             end
-          end.join(' ')
+
+            if ps_titles.any?
+              # Clean trailing dots and join with periods
+              clean_titles = ps_titles.map { |t| t.sub(/\.+\z/, '') }
+              parts << clean_titles.join('. ') + '.'
+            end
+
+            parts.join(' ')
+          else
+            # Fallback for standard posts without the itinerary summary block
+            headers = doc.css('h1, h2, h3, h4, h5, h6')
+                        .map(&:text)
+                        .map(&:strip)
+                        .reject(&:empty?)
+                        .first(5)
+
+            return "" if headers.empty?
+
+            headers.each_with_index.map do |header, idx|
+              clean_header = header.sub(/\.+\z/, '')
+              if clean_header.match?(/^\d+[\.\)]/)
+                "#{clean_header}."
+              else
+                "#{idx + 1}. #{clean_header}."
+              end
+            end.join(' ')
+          end
         end
         def blog_post_data_to_index
           return nil if self.no_index == true
