@@ -102,65 +102,32 @@ module Locomotive
           end.compact.join(' ').strip
         end
         def extract_headers(html_content, max_chars = 3000)
-          return "" if html_content.blank?
+  return "" if html_content.blank?
 
-          doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
+  doc = Nokogiri::HTML::DocumentFragment.parse(html_content)
 
-          ignored_terms = [
-            /quick summary/i,
-            /further reading/i,
-            /table of contents/i,
-            /related posts/i,
-            /conclusion/i
-          ]
+  ignored_terms = [
+    /quick summary/i,
+    /further reading/i,
+    /table of contents/i,
+    /related posts/i,
+    /conclusion/i
+  ]
 
-          headers = doc.css('h1, h2, h3, h4, h5, h6')
-                      .map(&:text)
-                      .map(&:strip)
-                      .reject(&:empty?)
-                      .reject { |text| ignored_terms.any? { |pattern| text.match?(pattern) } }
+  headers = doc.css('h1, h2, h3, h4, h5, h6')
+               .map(&:text)
+               .map(&:strip)
+               .reject(&:empty?)
+               .reject { |text| ignored_terms.any? { |pattern| text.match?(pattern) } }
 
-          return "" if headers.empty?
+  return "" if headers.empty?
 
-          formatted_headers = headers.map do |header|
-            clean_header = header.sub(/\.+\z/, '') # Remove existing trailing dots
-            "#{clean_header}."
-          end.join(' ')
+  # Clean trailing dots and join headers with bullet points
+  formatted_headers = headers.map { |h| h.sub(/\.+\z/, '') }.join(' • ')
 
-          # Truncate at maximum allowed characters without cutting off mid-word
-          formatted_headers.truncate(max_chars, separator: ' ')
-        end
-
-        def blog_post_data_to_index
-          return nil if self.no_index == true
-
-          # 1. Extract ALL valid section headers up to 3,000 chars
-          headers_text = extract_headers(self.body, 3000)
-
-          weight = 1
-          slug_down = self._slug.to_s.downcase
-          if slug_down.include?("things-to-do")       then weight = 9
-          elsif slug_down.include?("itinerary")       then weight = 10
-          elsif slug_down.include?("places-to-visit") then weight = 8
-          elsif slug_down.include?("travel-guide")    then weight = 7
-          elsif slug_down.include?("hiking-guide")    then weight = 6
-          elsif slug_down.include?("complete-guide")  then weight = 7
-          elsif slug_down.include?("ultimate-guide")  then weight = 7
-          end
-
-          {
-            '_content_type'  => self.content_type.slug,
-            '_slug'          => self._slug,
-            '_label'         => self._label,
-            'title'          => self.title,
-            'subtitle'       => self.subtitle,
-            'location'       => self.location,
-            'description'    => headers_text,
-            'thumbnail'      => self.header_img_thumb_webp&.url || self.header_img_thumb&.url,
-            'published_date' => self.date&.strftime('%b %d, %Y'),
-            'name_weight'    => weight
-          }
-        end
+  # Truncate safely at 3,000 characters without breaking words
+  formatted_headers.truncate(max_chars, separator: ' ')
+end
         
 
         
