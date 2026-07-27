@@ -112,7 +112,6 @@ module Locomotive
             .map(&:text)
             .map(&:strip)
             .reject(&:empty?)
-            .join(' ')
         end
         def blog_post_data_to_index
           if self.meta_description.nil? or self.meta_description.empty?
@@ -124,7 +123,7 @@ module Locomotive
           if headers.any?
             desc = "#{desc} | Sections: #{headers.join(' • ')}"
           end
-          
+
           weight = 1
 
           if self._slug.downcase.include? "things-to-do"
