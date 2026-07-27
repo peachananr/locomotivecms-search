@@ -32,34 +32,45 @@ module Locomotive
     end
     ## CUSTOM Index Job for BucketListly Blog Only
     def index_bucketlistly_post(site, entry, locale)
-      if entry.content_type.slug == "posts"
+      return if entry.nil? || entry.content_type.nil?
+
+      case entry.content_type.slug
+      when "posts"
+        data = entry.blog_post_data_to_index
+        return if data.nil? # Guard against nil payload (no_index or invisible)
+
+        formatted_title = [entry.title, entry.subtitle].map(&:presence).compact.join(' ')
+
         search_backend(entry.site, locale)&.save_object(
           type:       "9-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
-          title:      "#{entry.title} #{entry.subtitle}",
-          #content:    entry.blog_post_to_index,
+          title:      formatted_title,
           visible:    entry.visible?,
-          data:       entry.blog_post_data_to_index
+          data:       data
         )
-      end
-      if entry.content_type.slug == "videos"
+
+      when "videos"
+        data = entry.video_data_to_index
+        return if data.nil?
+
         search_backend(entry.site, locale)&.save_object(
           type:       "5-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
-          title:      "#{entry.title} Travel Video",
-          #content:    entry.blog_post_to_index,
+          title:      "#{entry.title} Travel Video".strip,
           visible:    entry.visible?,
-          data:       entry.video_data_to_index
+          data:       data
         )
-      end
-      if entry.content_type.slug == "destinations"
+
+      when "destinations"
+        data = entry.destination_data_to_index
+        return if data.nil?
+
         search_backend(entry.site, locale)&.save_object(
           type:       "1-#{entry.content_type.slug}",
           object_id:  entry._id.to_s,
-          title:      "#{entry.name} Travel Guides",
-          #content:    entry.destinations_to_index,
+          title:      "#{entry.name} Travel Guides".strip,
           visible:    entry.visible?,
-          data:       entry.destination_data_to_index
+          data:       data
         )
       end
     end
